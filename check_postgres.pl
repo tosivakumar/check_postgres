@@ -1024,9 +1024,9 @@ if (! defined $PSQL or ! length $PSQL) {
 }
 -x $PSQL or ndie msg('opt-psql-noexec', $PSQL);
 $res = qx{$PSQL --version};
-$res =~ /^psql \(PostgreSQL\) (\d+\.\d+)(\S*)/ or ndie msg('opt-psql-nover');
-our $psql_version = $1;
-our $psql_revision = $2;
+$res =~ /((?:^edb\-)?psql) (\(PostgreSQL\)|EnterpriseDB) (\d+\.\d+)(\S*)/ or ndie msg('opt-psql-nover');
+our $psql_version = $3;
+our $psql_revision = $4;
 $psql_revision =~ s/\D//g;
 
 $VERBOSE >= 2 and warn qq{psql=$PSQL version=$psql_version\n};
@@ -1940,10 +1940,10 @@ sub run_command {
                 if ($db->{error}) {
                     ndie $db->{error};
                 }
-                if ($db->{slurp} !~ /PostgreSQL (\d+\.\d+)/) {
+                if ($db->{slurp} !~ /(PostgreSQL|EnterpriseDB) (\d+\.\d+)/) {
                     ndie msg('die-badversion', $db->{slurp});
                 }
-                $db->{version} = $1;
+                $db->{version} = $2;
                 $db->{ok} = 0;
                 delete $arg->{versiononly};
                 ## Remove this from the returned hash
@@ -3040,7 +3040,7 @@ sub check_connection {
 
     $db = $info->{db}[0];
 
-    my $ver = ($db->{slurp}[0]{v} =~ /PostgreSQL (\d+\.\d+\S+)/o) ? $1 : '';
+    my $ver = ($db->{slurp}[0]{v} =~ /(PostgreSQL|EnterpriseDB) (\d+\.\d+\S+)/o) ? $2 : '';
 
     $MRTG and do_mrtg({one => $ver ? 1 : 0});
 
